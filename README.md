@@ -19,8 +19,8 @@ The goal of this lab is to:
 
 ## 2. System Requirements
 
-* Host OS: Linux (Ubuntu 20.04 / 22.04 recommended)
-* Virtualization: VMware / VirtualBox / Native Linux
+* Host OS: Linux (Ubuntu 20.04+)
+* Virtualization: VMware 
 * Minimum Resources:
 
   * 4 vCPUs
