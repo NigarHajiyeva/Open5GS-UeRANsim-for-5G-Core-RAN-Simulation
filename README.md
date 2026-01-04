@@ -1,5 +1,5 @@
 
-# Open5GS and UERANSIM Integration Guide
+# Deploying Open5GS + UERANSIM on Kubernetes
 
 This guide documents the installation process of a 5G core simulation environment using Open5GS, MongoDB, and Node.js on a Virtual Machine running Ubuntu. The setup is a part of a research project focused on **Authentication Mechanisms in 5G Networks**.
 
