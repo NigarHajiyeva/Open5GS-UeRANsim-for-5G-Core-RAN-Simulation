@@ -2,7 +2,7 @@
 
 A production-ready Helm chart for deploying Open5GS 5G Core Network and UERANSIM on Kubernetes.
 
-
+```bash
 ┌──────────────────────────────────────────────────────────────┐
 │                     Kind Cluster (kind-5gs)                  │
 │                                                              │
@@ -53,6 +53,7 @@ A production-ready Helm chart for deploying Open5GS 5G Core Network and UERANSIM
 │    │       WebUI (Port 30999)    │                           │
 │    └─────────────────────────────┘                           │
 └──────────────────────────────────────────────────────────────┘
+```
 
 ## Prerequisites
 
@@ -830,5 +831,6 @@ The gNB and UE run in the **same pod** with two containers:
 ---
 
 **Status**: ✅ Fully Functional - UE Registration, PDU Session, Internet Connectivity All Working
+
 
 
