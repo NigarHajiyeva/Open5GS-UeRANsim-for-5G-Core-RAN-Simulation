@@ -775,11 +775,7 @@ The gNB and UE run in the **same pod** with two containers:
 - [Helm Documentation](https://helm.sh/docs/)
 - [3GPP 5G Specifications](https://www.3gpp.org)
 
-## Contributing
-
-Contributions are welcome! Please submit pull requests or issues to the main repository.
-
 ---
 
-**Last Updated**: December 2025
 **Status**: ✅ Fully Functional - UE Registration, PDU Session, Internet Connectivity All Working
+
