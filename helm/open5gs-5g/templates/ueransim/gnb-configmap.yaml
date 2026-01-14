@@ -1,0 +1,33 @@
+{{- if .Values.ueransim.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ueransim-gnb-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  open5gs-gnb.yaml: |
+    mcc: '{{ .Values.network.plmn.mcc }}'
+    mnc: '{{ .Values.network.plmn.mnc }}'
+    nci: '0x000000010'
+    idLength: 32
+    tac: {{ .Values.network.tac }}
+    linkIp: {{ .Values.ueransim.gnb.linkIp }}
+    ngapIp: {{ .Values.ueransim.gnb.ngapIp }}
+    gtpIp: {{ .Values.ueransim.gnb.gtpIp }}
+    ignoreStreamIds: true
+
+    slices:
+      - sst: 1
+
+    amfConfigs:
+      - address: {{ include "open5gs-5g.serviceFQDN" (dict "name" "amf" "root" .) }}
+        port: 38412
+
+    supportedTAs:
+      - tac: {{ .Values.network.tac }}
+        broadcastPlmnList:
+          - mcc: '{{ .Values.network.plmn.mcc }}'
+            mnc: '{{ .Values.network.plmn.mnc }}'
+            taiSliceSupportList:
+              - sst: 1
+{{- end }}

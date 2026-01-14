@@ -1,0 +1,59 @@
+{{- if .Values.open5gs.nrf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nrf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: nrf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: 7777
+      protocol: TCP
+      name: sbi
+  selector:
+    app: nrf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nrf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: nrf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.open5gs.nrf.replicas }}
+  selector:
+    matchLabels:
+      app: nrf
+  template:
+    metadata:
+      labels:
+        app: nrf
+    spec:
+      containers:
+      - name: nrf
+        image: "{{ .Values.images.open5gs.repository }}:{{ .Values.images.open5gs.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/bin/open5gs-nrfd"]
+        args: ["-c", "/etc/open5gs/nrf.yaml"]
+        ports:
+        - containerPort: 7777
+          name: sbi
+          protocol: TCP
+        volumeMounts:
+        - name: nrf-config
+          mountPath: /etc/open5gs
+        {{- if .Values.open5gs.nrf.resources }}
+        resources:
+          {{- toYaml .Values.open5gs.nrf.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: nrf-config
+        configMap:
+          name: nrf-config
+{{- end }}

@@ -1,0 +1,59 @@
+{{- if .Values.open5gs.pcf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: pcf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: pcf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: 7777
+      protocol: TCP
+      name: sbi
+  selector:
+    app: pcf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pcf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: pcf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.open5gs.pcf.replicas }}
+  selector:
+    matchLabels:
+      app: pcf
+  template:
+    metadata:
+      labels:
+        app: pcf
+    spec:
+      containers:
+      - name: pcf
+        image: "{{ .Values.images.open5gs.repository }}:{{ .Values.images.open5gs.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/bin/open5gs-pcfd"]
+        args: ["-c", "/etc/open5gs/pcf.yaml"]
+        ports:
+        - containerPort: 7777
+          name: sbi
+          protocol: TCP
+        volumeMounts:
+        - name: pcf-config
+          mountPath: /etc/open5gs
+        {{- if .Values.open5gs.pcf.resources }}
+        resources:
+          {{- toYaml .Values.open5gs.pcf.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: pcf-config
+        configMap:
+          name: pcf-config
+{{- end }}

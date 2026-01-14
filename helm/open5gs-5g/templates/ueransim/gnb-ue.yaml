@@ -1,0 +1,60 @@
+{{- if .Values.ueransim.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ueransim-gnb
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: ueransim-gnb
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.ueransim.gnb.replicas }}
+  selector:
+    matchLabels:
+      app: ueransim-gnb
+  template:
+    metadata:
+      labels:
+        app: ueransim-gnb
+    spec:
+      containers:
+      - name: gnb
+        image: "{{ .Values.images.ueransim.repository }}:{{ .Values.images.ueransim.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/ueransim/build/nr-gnb"]
+        args: ["-c", "/ueransim/config/open5gs-gnb.yaml"]
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        volumeMounts:
+        - name: gnb-config
+          mountPath: /ueransim/config
+        {{- if .Values.ueransim.gnb.resources }}
+        resources:
+          {{- toYaml .Values.ueransim.gnb.resources | nindent 10 }}
+        {{- end }}
+      {{- if .Values.ueransim.ue.enabled }}
+      - name: ue
+        image: "{{ .Values.images.ueransim.repository }}:{{ .Values.images.ueransim.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/bin/sh"]
+        args: ["-c", "sleep {{ .Values.ueransim.ue.delay }} && /ueransim/build/nr-ue -c /ueransim/config/open5gs-ue.yaml"]
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        volumeMounts:
+        - name: ue-config
+          mountPath: /ueransim/config
+        {{- if .Values.ueransim.ue.resources }}
+        resources:
+          {{- toYaml .Values.ueransim.ue.resources | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      volumes:
+      - name: gnb-config
+        configMap:
+          name: ueransim-gnb-config
+      {{- if .Values.ueransim.ue.enabled }}
+      - name: ue-config
+        configMap:
+          name: ueransim-ue-config
+      {{- end }}
+{{- end }}

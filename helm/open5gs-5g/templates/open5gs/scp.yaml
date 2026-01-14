@@ -1,0 +1,59 @@
+{{- if .Values.open5gs.scp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: scp
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: scp
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7777
+      targetPort: 7777
+      protocol: TCP
+      name: sbi
+  selector:
+    app: scp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scp
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: scp
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.open5gs.scp.replicas }}
+  selector:
+    matchLabels:
+      app: scp
+  template:
+    metadata:
+      labels:
+        app: scp
+    spec:
+      containers:
+      - name: scp
+        image: "{{ .Values.images.open5gs.repository }}:{{ .Values.images.open5gs.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/bin/open5gs-scpd"]
+        args: ["-c", "/etc/open5gs/scp.yaml"]
+        ports:
+        - containerPort: 7777
+          name: sbi
+          protocol: TCP
+        volumeMounts:
+        - name: scp-config
+          mountPath: /etc/open5gs
+        {{- if .Values.open5gs.scp.resources }}
+        resources:
+          {{- toYaml .Values.open5gs.scp.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: scp-config
+        configMap:
+          name: scp-config
+{{- end }}

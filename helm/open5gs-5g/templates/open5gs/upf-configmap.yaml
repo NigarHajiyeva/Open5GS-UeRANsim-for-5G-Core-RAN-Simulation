@@ -1,0 +1,62 @@
+{{- if .Values.open5gs.upf.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  upf.yaml: |
+    logger:
+      level: info
+
+    upf:
+      pfcp:
+        server:
+          - address: 0.0.0.0
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "upf" "root" .) }}
+        client:
+          smf:
+            - address: {{ include "open5gs-5g.serviceFQDN" (dict "name" "smf" "root" .) }}
+      gtpu:
+        server:
+          - address: 0.0.0.0
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "upf" "root" .) }}
+      session:
+        - subnet: {{ .Values.network.ueSubnet }}
+          gateway: {{ .Values.network.gateway }}
+      metrics:
+        server:
+          - address: 0.0.0.0
+            port: 9090
+  upf-entrypoint.sh: |
+    #!/bin/bash
+    echo "Setting up UPF network..."
+    /bin/open5gs-upfd -c /etc/open5gs/upf.yaml &
+    UPF_PID=$!
+    echo "Waiting for ogstun interface..."
+    for i in {1..30}; do
+        if ip link show ogstun &>/dev/null; then
+            echo "ogstun interface detected"
+            break
+        fi
+        sleep 1
+    done
+    if ip link show ogstun &>/dev/null; then
+        ip addr add {{ .Values.network.gateway }}/16 dev ogstun 2>/dev/null || true
+        ip link set ogstun up 2>/dev/null || true
+        echo "ogstun interface is up with IP {{ .Values.network.gateway }}"
+        iptables -t nat -A POSTROUTING -s {{ .Values.network.ueSubnet }} ! -o ogstun -j MASQUERADE 2>/dev/null || true
+        echo "NAT rules configured"
+        # Keep ogstun configured
+        while true; do
+            sleep 5
+            if ip link show ogstun &>/dev/null; then
+                ip addr show ogstun | grep -q "{{ .Values.network.gateway }}" || ip addr add {{ .Values.network.gateway }}/16 dev ogstun 2>/dev/null || true
+                ip link set ogstun up 2>/dev/null || true
+            fi
+        done &
+    else
+        echo "Warning: ogstun interface not found"
+    fi
+    wait $UPF_PID
+{{- end }}

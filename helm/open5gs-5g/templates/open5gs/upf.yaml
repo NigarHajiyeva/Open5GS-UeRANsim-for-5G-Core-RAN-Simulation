@@ -1,0 +1,78 @@
+{{- if .Values.open5gs.upf.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: upf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: upf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.open5gs.upf.service.type }}
+  ports:
+    - port: 8805
+      targetPort: 8805
+      {{- if eq .Values.open5gs.upf.service.type "NodePort" }}
+      nodePort: {{ .Values.open5gs.upf.service.pfcp.nodePort }}
+      {{- end }}
+      protocol: UDP
+      name: pfcp
+    - port: 2152
+      targetPort: 2152
+      {{- if eq .Values.open5gs.upf.service.type "NodePort" }}
+      nodePort: {{ .Values.open5gs.upf.service.gtpu.nodePort }}
+      {{- end }}
+      protocol: UDP
+      name: gtpu
+  selector:
+    app: upf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: upf
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.open5gs.upf.replicas }}
+  selector:
+    matchLabels:
+      app: upf
+  template:
+    metadata:
+      labels:
+        app: upf
+    spec:
+      containers:
+      - name: upf
+        image: "{{ .Values.images.open5gs.repository }}:{{ .Values.images.open5gs.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        command: ["/bin/sh"]
+        args: ["/scripts/upf-entrypoint.sh"]
+        ports:
+        - containerPort: 8805
+          name: pfcp
+          protocol: UDP
+        - containerPort: 2152
+          name: gtpu
+          protocol: UDP
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        volumeMounts:
+        - name: upf-config
+          mountPath: /etc/open5gs/upf.yaml
+          subPath: upf.yaml
+        - name: upf-config
+          mountPath: /scripts/upf-entrypoint.sh
+          subPath: upf-entrypoint.sh
+        {{- if .Values.open5gs.upf.resources }}
+        resources:
+          {{- toYaml .Values.open5gs.upf.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: upf-config
+        configMap:
+          name: upf-config
+{{- end }}

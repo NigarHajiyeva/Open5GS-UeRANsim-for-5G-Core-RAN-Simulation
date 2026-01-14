@@ -1,0 +1,52 @@
+{{- if .Values.webui.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: webui
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.webui.service.type }}
+  ports:
+    - port: {{ .Values.webui.service.port }}
+      targetPort: 9999
+      {{- if eq .Values.webui.service.type "NodePort" }}
+      nodePort: {{ .Values.webui.service.nodePort }}
+      {{- end }}
+      protocol: TCP
+      name: http
+  selector:
+    app: webui
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webui
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: webui
+    {{- include "open5gs-5g.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webui
+  template:
+    metadata:
+      labels:
+        app: webui
+    spec:
+      containers:
+      - name: webui
+        image: "{{ .Values.images.webui.repository }}:{{ .Values.images.webui.tag }}"
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        ports:
+        - containerPort: 9999
+          name: http
+          protocol: TCP
+        env:
+        - name: DB_URI
+          value: "mongodb://mongodb:27017/open5gs"
+{{- end }}

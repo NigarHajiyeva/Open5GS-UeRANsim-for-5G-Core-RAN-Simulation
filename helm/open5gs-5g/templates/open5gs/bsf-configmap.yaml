@@ -1,0 +1,25 @@
+{{- if .Values.open5gs.bsf.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bsf-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  bsf.yaml: |
+    logger:
+      level: info
+
+    bsf:
+      sbi:
+        server:
+          - address: 0.0.0.0
+            port: 7777
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "bsf" "root" .) }}
+        client:
+          nrf:
+            - uri: http://{{ include "open5gs-5g.serviceFQDN" (dict "name" "nrf" "root" .) }}:7777
+      metrics:
+        server:
+          - address: 0.0.0.0
+            port: 9090
+{{- end }}

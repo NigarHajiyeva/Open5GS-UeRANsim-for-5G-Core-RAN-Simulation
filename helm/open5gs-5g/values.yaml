@@ -1,0 +1,220 @@
+# Default values for open5gs-5g Helm chart
+
+# Global settings
+global:
+  namespace: open5gs
+  imagePullPolicy: Never  # Use "IfNotPresent" for remote registries
+
+# Image settings
+images:
+  open5gs:
+    repository: local/open5gs
+    tag: latest
+  ueransim:
+    repository: local/ueransim
+    tag: latest
+  webui:
+    repository: local/open5gs-webui
+    tag: latest
+  mongodb:
+    repository: mongo
+    tag: latest
+
+# Network configuration
+network:
+  plmn:
+    mcc: "999"
+    mnc: "70"
+  tac: 1
+  ueSubnet: "10.45.0.0/16"
+  gateway: "10.45.0.1"
+  dns:
+    primary: "8.8.8.8"
+    secondary: "8.8.4.4"
+  mtu: 1400
+
+# Subscriber configuration
+subscriber:
+  imsi: "999700000000001"
+  key: "465B5CE8B199B49FAA5F0A2EE238A6BC"
+  opc: "E8ED289DEBA952E4283B54E88E6183CA"
+  dnn: "internet"
+
+# WebUI configuration
+webui:
+  enabled: true
+  service:
+    type: NodePort
+    port: 9999
+    nodePort: 30999
+  admin:
+    username: "admin"
+    password: "1423"
+
+# MongoDB configuration
+mongodb:
+  enabled: true
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+
+# Open5GS Network Functions
+open5gs:
+  # Network Repository Function
+  nrf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Service Communication Proxy
+  scp:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Authentication Server Function
+  ausf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Unified Data Management
+  udm:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Unified Data Repository
+  udr:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Policy Control Function
+  pcf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Network Slice Selection Function
+  nssf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Binding Support Function
+  bsf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+  # Access and Mobility Management Function
+  amf:
+    enabled: true
+    replicas: 1
+    service:
+      type: NodePort
+      ngap:
+        port: 38412
+        nodePort: 30412
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "200m"
+
+  # Session Management Function
+  smf:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "200m"
+
+  # User Plane Function
+  upf:
+    enabled: true
+    replicas: 1
+    service:
+      type: NodePort
+      gtpu:
+        port: 2152
+        nodePort: 30152
+      pfcp:
+        port: 8805
+        nodePort: 30805
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "300m"
+
+# UERANSIM configuration
+ueransim:
+  enabled: true
+  gnb:
+    replicas: 1
+    linkIp: "0.0.0.0"
+    ngapIp: "0.0.0.0"
+    gtpIp: "0.0.0.0"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "200m"
+
+  ue:
+    enabled: true
+    count: 1
+    delay: 15  # seconds to wait after gNB starts
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+
+# Service account
+serviceAccount:
+  create: true
+  name: "open5gs-sa"
+
+# Security context
+securityContext:
+  privileged: true
+  capabilities:
+    add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}

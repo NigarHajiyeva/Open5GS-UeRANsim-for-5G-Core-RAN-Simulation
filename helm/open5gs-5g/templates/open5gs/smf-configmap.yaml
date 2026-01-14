@@ -1,0 +1,50 @@
+{{- if .Values.open5gs.smf.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smf-config
+  namespace: {{ .Values.global.namespace }}
+data:
+  smf.yaml: |
+    logger:
+      level: info
+
+    smf:
+      sbi:
+        server:
+          - address: 0.0.0.0
+            port: 7777
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "smf" "root" .) }}
+        client:
+          nrf:
+            - uri: http://{{ include "open5gs-5g.serviceFQDN" (dict "name" "nrf" "root" .) }}:7777
+      pfcp:
+        server:
+          - address: 0.0.0.0
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "smf" "root" .) }}
+      gtpc:
+        server:
+          - address: 0.0.0.0
+      gtpu:
+        server:
+          - address: 0.0.0.0
+            advertise: {{ include "open5gs-5g.serviceFQDN" (dict "name" "smf" "root" .) }}
+      metrics:
+        server:
+          - address: 0.0.0.0
+            port: 9090
+      session:
+        - subnet: {{ .Values.network.ueSubnet }}
+          gateway: {{ .Values.network.gateway }}
+      dns:
+        - {{ .Values.network.dns.primary }}
+        - {{ .Values.network.dns.secondary }}
+      mtu: {{ .Values.network.mtu }}
+      info:
+        - s_nssai:
+            - sst: 1
+              dnn:
+                - {{ .Values.subscriber.dnn }}
+      upf:
+        - dnn: {{ .Values.subscriber.dnn }}
+{{- end }}
